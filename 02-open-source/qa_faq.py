@@ -2,14 +2,53 @@ import streamlit as st
 import time
 
 from elasticsearch import Elasticsearch
-from openai import OpenAI
+from mistralai import Mistral
 
-client = OpenAI(
-    base_url='http://localhost:11434/v1/',
+client = Mistral(
+    server_url='http://localhost:11434/',
     api_key='ollama',
 )
 
 es_client = Elasticsearch('http://localhost:9200') 
+# remark: this assumes that retrievable documents have been loaded and indexed in this Elastic Search database. To do this, this code should have run after launching 
+# the elastic search docker file:
+
+'''
+es_client = Elasticsearch('http://localhost:9200') # should be running on docker with this port exposed
+
+import json
+with open('documents.json', 'rt') as f_in:
+    docs_raw = json.load(f_in)
+
+documents = []
+
+for course_dict in docs_raw:
+    for doc in course_dict['documents']:
+        doc['course'] = course_dict['course']
+        documents.append(doc)
+
+index_settings = {
+    "settings": {
+        "number_of_shards": 1,
+        "number_of_replicas": 0
+    },
+    "mappings": {
+        "properties": {
+            "text": {"type": "text"},
+            "section": {"type": "text"},
+            "question": {"type": "text"},
+            "course": {"type": "keyword"} 
+        }
+    }
+}
+
+index_name = "course-questions"
+
+es_client.indices.create(index=index_name, body=index_settings)
+
+for doc in documents:
+    es_client.index(index=index_name, body=doc)
+'''
 
 
 def elastic_search(query, index_name = "course-questions"):
@@ -63,7 +102,7 @@ CONTEXT:
     return prompt
 
 def llm(prompt):
-    response = client.chat.completions.create(
+    response = client.chat.complete(
         model='phi3',
         messages=[{"role": "user", "content": prompt}]
     )

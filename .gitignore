@@ -4,3 +4,4 @@ __pycache__/
 .envrc
 bruno/.env
 01-intro/.env
+02-open-source/.env
