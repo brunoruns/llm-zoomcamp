@@ -1,0 +1,21 @@
+version: '3'
+services:
+  geitje_service:
+    build:
+      context: .
+      dockerfile: Dockerfile.geitje_service
+    ports:
+      - "8000:8000"
+    container_name: geitje_service
+
+  streamlit_app:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    ports:
+      - "8501:8501"
+    container_name: streamlit_app
+    depends_on:
+      - geitje_service
+    environment:
+      - GEITJE_SERVICE_URL=http://geitje_service:8000
